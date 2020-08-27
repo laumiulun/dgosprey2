@@ -1,11 +1,21 @@
+
+[Outputs]
+	exodus = true
+	csv = true
+	print_linear_residuals = false
+  file_base = result/x5_n2/molar_vol/22_4
+[] #END Outputs
+
 [GlobalParams]
- length = 50 # cm
+ length = 25 # cm
  pellet_diameter = 0.045 # cm
- inner_diameter = 3 # cm
- flow_rate = 842251.8 # cm3/hr
- dt = 0.0005
- sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10)
- epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ inner_diameter = 15 # cm
+ # flow_rate =  442251.8# cm3/hr
+ flow_rate = 4.42e5
+ dt = 0.000277778 # 1s
+ sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10) epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ epsilon =  1 #  -1 = SIPG   0 = IIPG   1 = NIPG
+
 [] #END GlobalParams
 
 
@@ -18,23 +28,23 @@
 [Mesh]
 	type = GeneratedMesh
 	dim = 2
-	nx = 10
-	ny = 40
+	nx = 20
+	ny = 100
 	xmin = 0.0
-	xmax = 6 #cm
+	xmax = 7.5 #cm
 	ymin = 0.0
-	ymax = 50 #cm
+	ymax = 25 #cm
 [] # END Mesh
 
 # -----------------------------------------------------------------------------
 [Variables]
 	[./N2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 	[../]
 
 	[./O2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 	[../]
 
@@ -45,12 +55,12 @@
 	[../]
 
 	[./N2_Adsorbed]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
 	[./N2_AdsorbedHeat]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
@@ -182,7 +192,6 @@
 		variable = O2
 		index = 1
 	[../]
-
 	[./dg_adv_O2]
 		type = DGColumnMassAdvection
 		variable = O2
@@ -264,6 +273,7 @@
 		index = 1
 	[../]
 
+
 	# [./H2O_Flux]
 	# 	type = DGMassFluxBC
 	# 	variable = H2O
@@ -297,7 +307,7 @@
 	[./BedMaterials]
 		type = BedProperties
 		block = 0
-    outer_diameter = 3.5 # cm
+    outer_diameter = 16 # cm
 		bulk_porosity = 0.585 # %
 		wall_density = 8.0 # g/cm3
 		# wall_heat_capacity = 0.5
@@ -329,9 +339,9 @@
 		macropore_radius = 3.5e-6
 		pellet_density = 1.69
 		pellet_heat_capacity = 1.045
-		ref_diffusion = '0.8814 0'
+		ref_diffusion = '0 0'
 		activation_energy = '0 0'
-		ref_temperature = '267.999 0'
+		ref_temperature = '0 0'
 		affinity = '0 0'
 		temperature = column_temp
 		coupled_gases = 'N2 O2'
@@ -343,21 +353,21 @@
 		temperature = column_temp
 		total_pressure = total_pressure
 		coupled_gases = 'N2 O2'
-		number_sites = '4 0'
-		maximum_capacity = '11.67 0 ' #mol/kg 11.67
-		molar_volume = '13.91 0' #mol/cm3
+		number_sites = '1 0'
+		maximum_capacity = '0.03 0' #mol/kg 11.67
+		molar_volume = '22.4 0' #mol/cm3
     #
-		enthalpy_site_1 = '-46597.5 0'
-		enthalpy_site_2 = '-125024 0'
-		enthalpy_site_3 = '-193619 0'
-		enthalpy_site_4 = '-272228 0'
+		enthalpy_site_1 = '-11321 0'
+		enthalpy_site_2 = '0 0'
+		enthalpy_site_3 = '0 0'
+		enthalpy_site_4 = '0 0'
 		enthalpy_site_5 = '0 0 '
 		enthalpy_site_6 = '0 0'
 
-		entropy_site_1 = '-53.6994 0'
-		entropy_site_2 = '-221.073 0'
-		entropy_site_3 = '-356.728 0'
-		entropy_site_4 = '-567.459 0'
+		entropy_site_1 = '-25.77 0'
+		entropy_site_2 = '0 0'
+		entropy_site_3 = '0 0'
+		entropy_site_4 = '0 0'
 		entropy_site_5 = '0 0'
 		entropy_site_6 = '0 0'
 	[../]
@@ -385,6 +395,27 @@
 		variable = N2
 		execute_on = 'initial timestep_end'
 	[../]
+
+  [./O2_enter]
+		type = SideAverageValue
+		boundary = 'bottom'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_avg_gas]
+		type = ElementAverageValue
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_exit]
+		type = SideAverageValue
+		boundary = 'top'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
 
 	[./temp_exit]
 		type = SideAverageValue
@@ -420,7 +451,7 @@
 
 	type = Transient
 	scheme = bdf2
-  solve_type = PJFNK
+  # solve_type = PJFNK
 	# NOTE: The default tolerances are far to strict and cause the program to crawl
 	nl_rel_tol = 1e-10
 	nl_abs_tol = 1e-4
@@ -428,12 +459,12 @@
 	l_max_its = 100
 	nl_max_its = 50
 
-	# solve_type = pjfnk
+	solve_type = pjfnk
 	line_search = bt    # Options: default none l2 bt
-  # line_search = 
+  # line_search =
 	start_time = 0.0
-	end_time = 72.0
-	dtmax = 1.0
+	end_time = 0.0167
+	dtmax = 1e-3 # h
 
 	[./TimeStepper]
 		type = SolutionTimeAdaptiveDT
@@ -442,7 +473,13 @@
 [] #END Executioner
 
 [Preconditioning]
-  active = 'smp'
+  active = 'fdp'
+  [./none]
+    type = SMP
+    petsc_options = '-snes_converged_reason'
+    petsc_options_iname = '-pc_type -ksp_gmres_restart'
+    petsc_options_value = 'lu 2000'
+  [../]
   [./smp]
 		type = SMP
 		full = true
@@ -458,10 +495,3 @@
 		petsc_options_value = '1e-6 ds'
 	[../]
 [] #END Preconditioning
-
-[Outputs]
-	exodus = true
-	csv = true
-	print_linear_residuals = false
-  file_base = result/x5
-[] #END Outputs
