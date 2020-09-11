@@ -3,17 +3,19 @@
 	exodus = true
 	csv = true
 	print_linear_residuals = false
-  file_base = result/x5_n2/test_parameters
+  file_base = result/x5_n2/full_test2
 	perf_graph = true
 [] #END Outputs
 
 [GlobalParams]
  length = 25 # cm
  pellet_diameter = 0.045 # cm
- inner_diameter = 15 # cm
+ inner_diameter = 7.5 # cm
  # flow_rate =  442251.8# cm3/hr
  flow_rate = 4.42e5
- dt = 0.000277778 # 1s
+ # dt = 0.000277778 # 1s
+ # dt = 1
+ dt = 0.01
  sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10) epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
  epsilon =  1 #  -1 = SIPG   0 = IIPG   1 = NIPG
 
@@ -29,10 +31,10 @@
 [Mesh]
 	type = GeneratedMesh
 	dim = 2
-	nx = 20
+	nx = 40
 	ny = 100
 	xmin = 0.0
-	xmax = 7.5 #cm
+	xmax = 3.75 #cm
 	ymin = 0.0
 	ymax = 25 #cm
 [] # END Mesh
@@ -165,11 +167,13 @@
 	# [../]
   # Switch to using GSTA
   [./N2_Adsorption]
-    type = CoupledGSTAmodel
+    type = CoupledGSTALDFmodel
     variable = N2_Adsorbed
     coupled_gas = N2
     coupled_temp = column_temp
     index = 0
+		alpha = 15
+		beta = 15
   [../]
   # [./N2_Adsorption]
   #   type = CoupledGSTALDFmodel
@@ -337,6 +341,7 @@
 		comp_Sutherland_const = '111 127'
 		temperature = column_temp
 		total_pressure = total_pressure
+
 		coupled_gases = 'N2 O2'
 	[../]
   # X5
@@ -364,7 +369,7 @@
 		total_pressure = total_pressure
 		coupled_gases = 'N2 O2'
 		number_sites = '1 0'
-		maximum_capacity = '0.03 0' #mol/kg 11.67
+		maximum_capacity = '15.0 0' #mol/kg 11.67
 		molar_volume = '22.4 0' #mol/cm3
     #
 		enthalpy_site_1 = '-11321 0'
@@ -385,7 +390,9 @@
 
 
 [Postprocessors]
-
+	[./dt]
+		type = TimestepSize
+	[../]
 	[./N2_enter]
 		type = SideAverageValue
 		boundary = 'bottom'
@@ -470,14 +477,26 @@
 	nl_max_its = 50
 
 	solve_type = pjfnk
-	line_search = bt    # Options: default none l2 bt
+	line_search = bt   # Options: default none l2 bt
   # line_search =
 	start_time = 0.0
-	end_time = 0.0167
-	dtmax = 1e-3 # h
-
+	end_time = 10
+	# dtmax = 1 # h
+	# dt_max = 0.1
+	dtmax = 0.1
+	dtmin = 1e-5
 	[./TimeStepper]
-		type = SolutionTimeAdaptiveDT
+		# type =
+		# type = Solu/tionTimeAdaptiveDT
+		type = DGOSPREY_TimeStepper
+
+		# optimal_iterations = 7
+		# cutback_factor_at_failure = 0.85
+		# growth_factor = 1.2
+		# cutback_factor = 0.8
+		# dt_max
+		# dt = 0.1
+
 	[../]
 
 [] #END Executioner
