@@ -1,40 +1,58 @@
+
+[Outputs]
+	exodus = true
+	csv = true
+	print_linear_residuals = false
+  file_base = result/x5_n2/x5_initial_2cyl/x5_initial_2cyl
+	perf_graph = true
+[] #END Outputs
+
 [GlobalParams]
- length = 50 # cm
- pellet_diameter = 0.236 # cm
- inner_diameter = 3 # cm
- flow_rate = 442251.8 # cm3/hr
- dt = 0.001
- sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10)
- epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ length = 25 # cm
+ pellet_diameter = 0.045 # cm
+ inner_diameter = 7.5 # cm
+ # flow_rate =  442251.8# cm3/hr
+ flow_rate = 4.42e5
+ # dt = 0.000277778 # 1s
+ # dt = 1
+ dt = 0.005
+ sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10) epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ epsilon =  1 #  -1 = SIPG   0 = IIPG   1 = NIPG
+
 [] #END GlobalParams
 
 
 [Problem]
-	coord_type = RZ
+	# coord_type = RZ
+	# coord_type = RZ
 [] #END Problem
 
 # -----------------------------------------------------------------------------
 
 [Mesh]
-	type = GeneratedMesh
-	dim = 2
-	nx = 10
-	ny = 40
-	xmin = 0.0
-	xmax = 6 #cm
-	ymin = 0.0
-	ymax = 50 #cm
+	# type = GeneratedMesh
+	# dim = 2
+	# nx = 40
+	# ny = 100
+	# xmin = 0.0
+	# xmax = 3.75 #cm
+	# ymin = 0.0
+	# ymax = 25 #cm
+	type = FileMesh
+	file = ../geometry/2d_2cyl.e
+	boundary_id = '1 2 3 4'
+	boundary_name = 'bottom top right left'
 [] # END Mesh
 
 # -----------------------------------------------------------------------------
 [Variables]
 	[./N2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 	[../]
 
 	[./O2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 	[../]
 
@@ -45,17 +63,13 @@
 	[../]
 
 	[./N2_Adsorbed]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
 	[./N2_AdsorbedHeat]
-		order = CONSTANT
-		family = MONOMIAL3X. Moreover, for the equal volume of adsorbed nitrogen on both adsorbents, zeolite 5A is more
-capable rather than zeolite 13X to desorb much more volume of nitrogen at certain time. Furthermore, for achieving
-oxygen with purity of 96%, utilizing zeolite 5A is more economical than zeolite 13X, when 5.5<PH/PL<7 and 75<cycle
-time≤90.
-
+		order = FIRST
+		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
 [] #
@@ -158,12 +172,24 @@ time≤90.
 	# [../]
   # Switch to using GSTA
   [./N2_Adsorption]
-    type = CoupledGSTAmodel
+    type = CoupledGSTALDFmodel
     variable = N2_Adsorbed
     coupled_gas = N2
     coupled_temp = column_temp
     index = 0
+		alpha = 15
+		beta = 15
   [../]
+  # [./N2_Adsorption]
+  #   type = CoupledGSTALDFmodel
+  #   index = 0
+  #   alpha = 15
+  #   beta = 15
+  #   coupled_gas = 'N2'
+  #   variable = N2_Adsorbed
+  #   coupled_temp = column_temp
+  # [../]
+  # [./]
 [] #END Kernels
 
 # -----------------------------------------------------------------------------
@@ -185,7 +211,6 @@ time≤90.
 		variable = O2
 		index = 1
 	[../]
-
 	[./dg_adv_O2]
 		type = DGColumnMassAdvection
 		variable = O2
@@ -267,6 +292,7 @@ time≤90.
 		index = 1
 	[../]
 
+
 	# [./H2O_Flux]
 	# 	type = DGMassFluxBC
 	# 	variable = H2O
@@ -299,8 +325,8 @@ time≤90.
 
 	[./BedMaterials]
 		type = BedProperties
-		block = 0
-    outer_diameter = 3.5 # cm
+		block = 1
+    outer_diameter = 16 # cm
 		bulk_porosity = 0.585 # %
 		wall_density = 8.0 # g/cm3
 		# wall_heat_capacity = 0.5
@@ -311,7 +337,7 @@ time≤90.
 
 	[./FlowMaterials]
 		type = GasFlowProperties
-		block = 0
+		block = 1
     # N2 and O2
 		molecular_weight = '28.016 32'
 		comp_heat_capacity = '1.04 0.919 '
@@ -320,47 +346,48 @@ time≤90.
 		comp_Sutherland_const = '111 127'
 		temperature = column_temp
 		total_pressure = total_pressure
+
 		coupled_gases = 'N2 O2'
 	[../]
-  # X12
-	[./AdsorbentMaterials]
+  # X5
+  [./AdsorbentMaterials]
 		type = AdsorbentProperties
-		block = 0
-		binder_fraction = 0.5 # %
-		binder_porosity = 0.3 # Guessing
-		crystal_radius = 3 # um
-		macropore_radius = 5.0e-6 # cm
-		pellet_density = 1.1 # g/cm3
-		pellet_heat_capacity = 0.836 # J/g/K
-    ref_diffusion = '1.14e10 0' # um2/mol
-    activation_energy = '3.3e4 0' # J/mol
-		ref_temperature = '298 0'
-		affinity = '0.006 0' # Langmir constant for surface diffusion
+		block = 1
+		binder_fraction = 0.175
+		binder_porosity = 0.27
+		crystal_radius = 1.5
+		macropore_radius = 3.5e-6
+		pellet_density = 1.69
+		pellet_heat_capacity = 1.045
+		ref_diffusion = '0 0'
+		activation_energy = '0 0'
+		ref_temperature = '0 0'
+		affinity = '0 0'
 		temperature = column_temp
 		coupled_gases = 'N2 O2'
 	[../]
 
 	[./AdsorbateMaterials]
 		type = ThermodynamicProperties
-		block = 0
+		block = 1
 		temperature = column_temp
 		total_pressure = total_pressure
 		coupled_gases = 'N2 O2'
-		number_sites = '4 0'
-		maximum_capacity = '11.67 0 ' #mol/kg 11.67
-		molar_volume = '13.91 0' #mol/cm3
+		number_sites = '1 0'
+		maximum_capacity = '540 0' #mol/kg 11.67
+		molar_volume = '22.4 0' #mol/cm3
     #
-		enthalpy_site_1 = '-46597.5 0'
-		enthalpy_site_2 = '-125024 0'
-		enthalpy_site_3 = '-193619 0'
-		enthalpy_site_4 = '-272228 0'
+		enthalpy_site_1 = '-11321 0'
+		enthalpy_site_2 = '0 0'
+		enthalpy_site_3 = '0 0'
+		enthalpy_site_4 = '0 0'
 		enthalpy_site_5 = '0 0 '
 		enthalpy_site_6 = '0 0'
 
-		entropy_site_1 = '-53.6994 0'
-		entropy_site_2 = '-221.073 0'
-		entropy_site_3 = '-356.728 0'
-		entropy_site_4 = '-567.459 0'
+		entropy_site_1 = '-25.77 0'
+		entropy_site_2 = '0 0'
+		entropy_site_3 = '0 0'
+		entropy_site_4 = '0 0'
 		entropy_site_5 = '0 0'
 		entropy_site_6 = '0 0'
 	[../]
@@ -368,7 +395,9 @@ time≤90.
 
 
 [Postprocessors]
-
+	[./dt]
+		type = TimestepSize
+	[../]
 	[./N2_enter]
 		type = SideAverageValue
 		boundary = 'bottom'
@@ -388,6 +417,27 @@ time≤90.
 		variable = N2
 		execute_on = 'initial timestep_end'
 	[../]
+
+  [./O2_enter]
+		type = SideAverageValue
+		boundary = 'bottom'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_avg_gas]
+		type = ElementAverageValue
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_exit]
+		type = SideAverageValue
+		boundary = 'top'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
 
 	[./temp_exit]
 		type = SideAverageValue
@@ -415,6 +465,7 @@ time≤90.
 		variable = N2_Adsorbed
 		execute_on = 'initial timestep_end'
 	[../]
+
 [] #END Postprocessors
 
 
@@ -423,7 +474,7 @@ time≤90.
 
 	type = Transient
 	scheme = bdf2
-
+  # solve_type = PJFNK
 	# NOTE: The default tolerances are far to strict and cause the program to crawl
 	nl_rel_tol = 1e-10
 	nl_abs_tol = 1e-4
@@ -432,26 +483,45 @@ time≤90.
 	nl_max_its = 50
 
 	solve_type = pjfnk
-	line_search = bt    # Options: default none l2 bt
+	line_search = bt   # Options: default none l2 bt
+  # line_search =
 	start_time = 0.0
-	end_time = 72.0
-	dtmax = 1.0
-
+	end_time = 1
+	# dtmax = 1 # h
+	# dt_max = 0.1
+	dtmax = 0.1
+	dtmin = 1e-5
 	[./TimeStepper]
-		type = SolutionTimeAdaptiveDT
+		# type =
+		# type = Solu/tionTimeAdaptiveDT
+		type = DGOSPREY_TimeStepper
+
+		# optimal_iterations = 7
+		# cutback_factor_at_failure = 0.85
+		# growth_factor = 1.2
+		# cutback_factor = 0.8
+		# dt_max
+		# dt = 0.1
+
 	[../]
 
 [] #END Executioner
 
 [Preconditioning]
-  active = 'fdp'
-  # [./smp]
-	# 	type = SMP
-	# 	full = true
-	# 	petsc_options = '-snes_converged_reason'
-	# 	petsc_options_iname = '-pc_type -ksp_gmres_restart  -snes_max_funcs'
-	# 	petsc_options_value = 'lu 2000 20000'
-	# [../]
+	active='smp'
+  [./none]
+    type = SMP
+    petsc_options = '-snes_converged_reason'
+    petsc_options_iname = '-pc_type -ksp_gmres_restart'
+    petsc_options_value = 'lu 2000'
+  [../]
+  [./smp]
+		type = SMP
+		full = true
+		petsc_options = '-snes_converged_reason'
+		petsc_options_iname = '-pc_type -ksp_gmres_restart  -snes_max_funcs'
+		petsc_options_value = 'lu 2000 20000'
+	[../]
   [./fdp]
 		type = FDP
 		full = true
@@ -460,11 +530,3 @@ time≤90.
 		petsc_options_value = '1e-6 ds'
 	[../]
 [] #END Preconditioning
-
-[Outputs]
-
-	exodus = true
-	csv = true
-	print_linear_residuals = false
-
-[] #END Outputs

@@ -3,7 +3,7 @@
 	exodus = true
 	csv = true
 	print_linear_residuals = false
-  file_base = result/x5_n2/full_test2
+  file_base = result/x5_n2/x5_h2_testing
 	perf_graph = true
 [] #END Outputs
 
@@ -15,7 +15,8 @@
  flow_rate = 4.42e5
  # dt = 0.000277778 # 1s
  # dt = 1
- dt = 0.01
+ dt = 0.005
+ # end
  sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10) epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
  epsilon =  1 #  -1 = SIPG   0 = IIPG   1 = NIPG
 
@@ -369,7 +370,8 @@
 		total_pressure = total_pressure
 		coupled_gases = 'N2 O2'
 		number_sites = '1 0'
-		maximum_capacity = '15.0 0' #mol/kg 11.67
+		# maximum_capacity = '15.0 0' #mol/kg 11.67
+		maximum_capacity = '50.0 0'
 		molar_volume = '22.4 0' #mol/cm3
     #
 		enthalpy_site_1 = '-11321 0'
@@ -480,10 +482,10 @@
 	line_search = bt   # Options: default none l2 bt
   # line_search =
 	start_time = 0.0
-	end_time = 10
+	end_time = 5 #hr
 	# dtmax = 1 # h
 	# dt_max = 0.1
-	dtmax = 0.1
+	# dtmax = 0.1
 	dtmin = 1e-5
 	[./TimeStepper]
 		# type =

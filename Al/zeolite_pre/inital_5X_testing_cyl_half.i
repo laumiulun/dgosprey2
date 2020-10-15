@@ -178,6 +178,7 @@
     index = 0
 		alpha = 15
 		beta = 15
+
   [../]
   # [./N2_Adsorption]
   #   type = CoupledGSTALDFmodel

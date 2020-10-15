@@ -1,11 +1,27 @@
+
+[Outputs]
+	exodus = true
+	csv = true
+	print_linear_residuals = false
+  file_base = result/x13_verify/x13_test_new_1
+	perf_graph = true
+[] #END Outputs
+
 [GlobalParams]
- length = 50 # cm
- pellet_diameter = 0.236 # cm
+ length = 20 # cm
+ pellet_diameter = 0.045 # cm
  inner_diameter = 3 # cm
- flow_rate = 442251.8 # cm3/hr
- dt = 0.001
- sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10)
- epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ # flow_rate =  442251.8# cm3/hr
+ flow_rate = 2046.2962963 #cm3/hr
+ # dt =  # 1s
+ end_time =  0.01666668#hr
+
+ # dt = 1
+ # dt = 0.005
+ # end
+ sigma = 1   # Penalty value:  NIPG = 0   otherwise, > 0  (between 0.1 and 10) epsilon = 1  #  -1 = SIPG   0 = IIPG   1 = NIPG
+ epsilon =  1 #  -1 = SIPG   0 = IIPG   1 = NIPG
+
 [] #END GlobalParams
 
 
@@ -18,24 +34,25 @@
 [Mesh]
 	type = GeneratedMesh
 	dim = 2
-	nx = 10
-	ny = 40
+	nx = 40
+	ny = 100
 	xmin = 0.0
-	xmax = 6 #cm
+	xmax = 1.5#cm
 	ymin = 0.0
-	ymax = 50 #cm
+	ymax = 20 #cm
 [] # END Mesh
 
 # -----------------------------------------------------------------------------
 [Variables]
 	[./N2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 	[../]
 
 	[./O2]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
+
 	[../]
 
 	[./column_temp]
@@ -45,17 +62,13 @@
 	[../]
 
 	[./N2_Adsorbed]
-		order = CONSTANT
+		order = FIRST
 		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
 	[./N2_AdsorbedHeat]
-		order = CONSTANT
-		family = MONOMIAL3X. Moreover, for the equal volume of adsorbed nitrogen on both adsorbents, zeolite 5A is more
-capable rather than zeolite 13X to desorb much more volume of nitrogen at certain time. Furthermore, for achieving
-oxygen with purity of 96%, utilizing zeolite 5A is more economical than zeolite 13X, when 5.5<PH/PL<7 and 75<cycle
-time≤90.
-
+		order = FIRST
+		family = MONOMIAL
 		initial_condition = 0.0
 	[../]
 [] #
@@ -158,12 +171,24 @@ time≤90.
 	# [../]
   # Switch to using GSTA
   [./N2_Adsorption]
-    type = CoupledGSTAmodel
+    type = CoupledGSTALDFmodel
     variable = N2_Adsorbed
     coupled_gas = N2
     coupled_temp = column_temp
     index = 0
+		alpha = 15
+		beta = 15
   [../]
+  # [./N2_Adsorption]
+  #   type = CoupledGSTALDFmodel
+  #   index = 0
+  #   alpha = 15
+  #   beta = 15
+  #   coupled_gas = 'N2'
+  #   variable = N2_Adsorbed
+  #   coupled_temp = column_temp
+  # [../]
+  # [./]
 [] #END Kernels
 
 # -----------------------------------------------------------------------------
@@ -185,7 +210,6 @@ time≤90.
 		variable = O2
 		index = 1
 	[../]
-
 	[./dg_adv_O2]
 		type = DGColumnMassAdvection
 		variable = O2
@@ -226,13 +250,14 @@ time≤90.
 
 
 [ICs]
-
+	active='N2_IC O2_IC'
 	[./N2_IC]
 		type = ConcentrationIC
 		variable = N2
 		initial_mole_frac = 0.79
 		initial_press = 101.35
 		initial_temp = 303.15
+		# boundary = bottom
 	[../]
 
 	[./O2_IC]
@@ -241,6 +266,7 @@ time≤90.
 		initial_mole_frac = 0.21
 		initial_press = 101.35
 		initial_temp = 303.15
+		# boundary = bottom
 	[../]
 
 [] #END
@@ -250,7 +276,7 @@ time≤90.
 	[./N2_Flux]
 		type = DGMassFluxBC
 		variable = N2
-		boundary = 'top bottom'
+		boundary = 'bottom'
 		input_temperature = 303.15
 		input_pressure = 101.35
 		input_molefraction = 0.775 # 78 % N2
@@ -260,12 +286,13 @@ time≤90.
 	[./O2_Flux]
 		type = DGMassFluxBC
 		variable = O2
-		boundary = 'top bottom'
+		boundary = 'bottom'
 		input_temperature = 303.15
 		input_pressure = 101.35
 		input_molefraction = 0.21
 		index = 1
 	[../]
+
 
 	# [./H2O_Flux]
 	# 	type = DGMassFluxBC
@@ -290,6 +317,22 @@ time≤90.
 		boundary = 'right left'
 		wall_temp = wall_temp
 	[../]
+	#
+	# [./Boundary_N2]
+	# 	type = DirichletBC
+	# 	preset = true
+	# 	variable = N2
+	# 	boundary = 'bottom'
+	# 	value = 0.79
+	# [../]
+	#
+	# [./Boundary_O2]
+	# 	type = DirichletBC
+	# 	preset = true
+	# 	variable = O2
+	# 	boundary = 'bottom'
+	# 	value = 0.21
+	# [../]
 
 [] #END BCs
 
@@ -300,7 +343,7 @@ time≤90.
 	[./BedMaterials]
 		type = BedProperties
 		block = 0
-    outer_diameter = 3.5 # cm
+    outer_diameter = 16 # cm
 		bulk_porosity = 0.585 # %
 		wall_density = 8.0 # g/cm3
 		# wall_heat_capacity = 0.5
@@ -320,22 +363,23 @@ time≤90.
 		comp_Sutherland_const = '111 127'
 		temperature = column_temp
 		total_pressure = total_pressure
+
 		coupled_gases = 'N2 O2'
 	[../]
-  # X12
-	[./AdsorbentMaterials]
+  # X5
+  [./AdsorbentMaterials]
 		type = AdsorbentProperties
 		block = 0
-		binder_fraction = 0.5 # %
-		binder_porosity = 0.3 # Guessing
-		crystal_radius = 3 # um
-		macropore_radius = 5.0e-6 # cm
-		pellet_density = 1.1 # g/cm3
-		pellet_heat_capacity = 0.836 # J/g/K
-    ref_diffusion = '1.14e10 0' # um2/mol
-    activation_energy = '3.3e4 0' # J/mol
-		ref_temperature = '298 0'
-		affinity = '0.006 0' # Langmir constant for surface diffusion
+		binder_fraction = 0.175
+		binder_porosity = 0.27
+		crystal_radius = 1.5
+		macropore_radius = 3.5e-6
+		pellet_density = 1.69
+		pellet_heat_capacity = 1.045
+		ref_diffusion = '0 0'
+		activation_energy = '0 0'
+		ref_temperature = '0 0'
+		affinity = '0 0'
 		temperature = column_temp
 		coupled_gases = 'N2 O2'
 	[../]
@@ -346,21 +390,22 @@ time≤90.
 		temperature = column_temp
 		total_pressure = total_pressure
 		coupled_gases = 'N2 O2'
-		number_sites = '4 0'
-		maximum_capacity = '11.67 0 ' #mol/kg 11.67
-		molar_volume = '13.91 0' #mol/cm3
+		number_sites = '1 0'
+		# maximum_capacity = '15.0 0' #mol/kg 11.67
+		maximum_capacity = '1 0'
+		molar_volume = '22.4 0' #mol/cm3
     #
-		enthalpy_site_1 = '-46597.5 0'
-		enthalpy_site_2 = '-125024 0'
-		enthalpy_site_3 = '-193619 0'
-		enthalpy_site_4 = '-272228 0'
+		enthalpy_site_1 = '-11321 0'
+		enthalpy_site_2 = '0 0'
+		enthalpy_site_3 = '0 0'
+		enthalpy_site_4 = '0 0'
 		enthalpy_site_5 = '0 0 '
 		enthalpy_site_6 = '0 0'
 
-		entropy_site_1 = '-53.6994 0'
-		entropy_site_2 = '-221.073 0'
-		entropy_site_3 = '-356.728 0'
-		entropy_site_4 = '-567.459 0'
+		entropy_site_1 = '-25.77 0'
+		entropy_site_2 = '0 0'
+		entropy_site_3 = '0 0'
+		entropy_site_4 = '0 0'
 		entropy_site_5 = '0 0'
 		entropy_site_6 = '0 0'
 	[../]
@@ -368,7 +413,9 @@ time≤90.
 
 
 [Postprocessors]
-
+	[./dt]
+		type = TimestepSize
+	[../]
 	[./N2_enter]
 		type = SideAverageValue
 		boundary = 'bottom'
@@ -386,8 +433,30 @@ time≤90.
 		type = SideAverageValue
 		boundary = 'top'
 		variable = N2
+		# execute_on = 'initial timestep_end'
 		execute_on = 'initial timestep_end'
 	[../]
+
+  [./O2_enter]
+		type = SideAverageValue
+		boundary = 'bottom'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_avg_gas]
+		type = ElementAverageValue
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
+	[./O2_exit]
+		type = SideAverageValue
+		boundary = 'top'
+		variable = O2
+		execute_on = 'initial timestep_end'
+	[../]
+
 
 	[./temp_exit]
 		type = SideAverageValue
@@ -423,7 +492,7 @@ time≤90.
 
 	type = Transient
 	scheme = bdf2
-
+  # solve_type = PJFNK
 	# NOTE: The default tolerances are far to strict and cause the program to crawl
 	nl_rel_tol = 1e-10
 	nl_abs_tol = 1e-4
@@ -432,26 +501,45 @@ time≤90.
 	nl_max_its = 50
 
 	solve_type = pjfnk
-	line_search = bt    # Options: default none l2 bt
+	line_search = default   # Options: default none l2 bt
+  # line_search =
 	start_time = 0.0
-	end_time = 72.0
-	dtmax = 1.0
-
+	# end_time = 5 #hr
+	# dtmax = 1 # h
+	# dt_max = 0.1
+	# dtmax = 0.1
+	# dtmin = 1e-5
 	[./TimeStepper]
+		# type =
+		# type = Solu/tionTimeAdaptiveDT
 		type = SolutionTimeAdaptiveDT
+
+		# optimal_iterations = 7
+		# cutback_factor_at_failure = 0.85
+		# growth_factor = 1.2
+		# cutback_factor = 0.8
+		# dt_max
+		# dt = 0.1
+		dt = 0.000277778
 	[../]
 
 [] #END Executioner
 
 [Preconditioning]
-  active = 'fdp'
-  # [./smp]
-	# 	type = SMP
-	# 	full = true
-	# 	petsc_options = '-snes_converged_reason'
-	# 	petsc_options_iname = '-pc_type -ksp_gmres_restart  -snes_max_funcs'
-	# 	petsc_options_value = 'lu 2000 20000'
-	# [../]
+  active = 'smp'
+  [./none]
+    type = SMP
+    petsc_options = '-snes_converged_reason'
+    petsc_options_iname = '-pc_type -ksp_gmres_restart'
+    petsc_options_value = 'lu 2000'
+  [../]
+  [./smp]
+		type = SMP
+		full = true
+		petsc_options = '-snes_converged_reason'
+		petsc_options_iname = '-pc_type -ksp_gmres_restart  -snes_max_funcs'
+		petsc_options_value = 'lu 2000 20000'
+	[../]
   [./fdp]
 		type = FDP
 		full = true
@@ -460,11 +548,3 @@ time≤90.
 		petsc_options_value = '1e-6 ds'
 	[../]
 [] #END Preconditioning
-
-[Outputs]
-
-	exodus = true
-	csv = true
-	print_linear_residuals = false
-
-[] #END Outputs
