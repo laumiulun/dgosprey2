@@ -52,6 +52,7 @@ InputParameters validParams<WallTemperature>()
 
 WallTemperature::WallTemperature(const InputParameters & parameters) :
 AuxKernel(parameters),
+_u_old(uOld()),
 _column_temp(coupledValue("column_temp")),
 _ambient_temp(coupledValue("ambient_temp")),
 _hbw(getMaterialProperty< Real >("bed_wall_transfer_coeff")),
@@ -70,13 +71,13 @@ _cw(getMaterialProperty< Real >("wall_heat_capacity"))
 Real WallTemperature::computeValue()
 {
 	Real value = 0.0;
-	
+
 	double Kbw, Kaw;
-	
+
 	Kbw = 4.0*_hbw[_qp]*_din[_qp]/((_dout[_qp]*_dout[_qp])-(_din[_qp]*_din[_qp]));
 	Kaw = 4.0*_haw[_qp]*_dout[_qp]/((_dout[_qp]*_dout[_qp])-(_din[_qp]*_din[_qp]));
-	
+
 	value = ((_rhow[_qp]*_cw[_qp]*_u_old[_qp])+(_dt*Kbw*_column_temp[_qp])+(_dt*Kaw*_ambient_temp[_qp]))/((_rhow[_qp]*_cw[_qp])+(_dt*Kbw)+(_dt*Kaw));
-	
+
 	return value;
 }

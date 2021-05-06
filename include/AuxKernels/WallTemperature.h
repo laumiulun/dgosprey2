@@ -4,7 +4,7 @@
  *	\details This file is responsible for calculating the wall temperature in a fixed-bed adsorber
  *			given the column temperature and ambient temperature or other temperature. It is linked
  *			with material properties to account for parameters of wall density, wall heat capacity,
- *			heat transfer coefficients, and column dimensions. 
+ *			heat transfer coefficients, and column dimensions.
  *
  *			The calculation is carried out with a semi-implicit, first order linear approximation at
  *			the start and end of each time step.
@@ -58,14 +58,14 @@ class WallTemperature : public AuxKernel
 public:
 	/// Standard MOOSE public constructor
 	WallTemperature(const InputParameters & parameters);
-	
+
 protected:
 	/// Required MOOSE function override
 	/** This is the function that is called by the MOOSE framework when a calculation of the total
 		system pressure is needed. You are required to override this function for any inherited
 		AuxKernel. */
 	virtual Real computeValue();
-	
+
 private:
 	const VariableValue & _column_temp;					///< Reference to the temperature non-linear variable
 	const VariableValue & _ambient_temp;				///< Reference to the temperature non-linear variable
@@ -75,5 +75,5 @@ private:
 	const MaterialProperty<Real> & _dout;				///< Reference to the outer diameter of the column
 	const MaterialProperty<Real> & _rhow;				///< Reference to the wall density material property
 	const MaterialProperty<Real> & _cw;					///< Reference to the heat capacity coefficient material property
-	
+	const VariableValue & _u_old;
 };
